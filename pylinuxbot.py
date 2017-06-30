@@ -24,6 +24,7 @@ def getCurrIP():
 def checkrequest(line):
     global scommand
     global XDOTOOL
+    global outmessage
     linesplit = line.split(" ")
     srequest = linesplit[1]
 
@@ -133,7 +134,20 @@ def checkrequest(line):
         print "ping Command"
         scommand = "ping"
         return 0
-
+        #
+    elif srequest == "/startppt":
+        print "startppt Command"
+        scommand = "startppt"
+        cmd = "xdotool key F5"
+        os.system(cmd)
+        return 0
+    elif srequest == "/getpptxfile":
+        print "getpptxdata Command"
+        scommand = "getpptxdata"
+        PPT_PID = subprocess.check_output("wmctrl -lp | grep pptx | tr -s " " | cut -d" " -f 3", shell=True)
+        PPT_FILE = subprocess.check_output("lsof -Fn -p " + PPT_PID + " | grep pptx", shell=True)
+        outmessage = PPT_FILE
+        return 0
     else:
         print "DEBUG: returning 1"
         return 1
@@ -143,6 +157,7 @@ def checkrequest(line):
 HOST = ''   # Symbolic name, meaning all available interfaces
 PORT = 8888  # Arbitrary non-privileged port
 scommand = ""
+outmessage = ""
 IP_ADDR = ""
 
 IP_ADDR = getCurrIP()
@@ -196,7 +211,10 @@ while 1:
     if status == 0:
         cfile.write('HTTP/1.0 200 OK\n\n')
         cfile.write('<html><head><title>Welcome %s!</title></head>' % (str(addr)))
-        cfile.write('<body><h1>Command %s proccessed...</h1><body></html>' % scommand)
+        if scommand == "getpptxdata":
+            cfile.write('<body><p>%s</p><body></html>' % outmessage)
+        else:
+            cfile.write('<body><h1>Command %s proccessed...</h1><body></html>' % scommand)
     else:
         print "DEBUG: HTTP 400"
         cfile.write('HTTP/1.0 404 Not Found\n\n')
